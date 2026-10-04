@@ -20,6 +20,8 @@ private link (`https://transferable.io/@handle/...`) the user sends to their cli
    Authorize themselves**: tell them, then wait for the command to return (it waits up to
    5 minutes). To use another account: `transferable login --force`.
 3. Confirm with `transferable whoami`, and tell the user which account is connected.
+   `upload` and `deliver` also print the account they act for on stderr
+   (`Account: @handle (email)`): if it is not the one the user expects, stop and tell them.
 4. If a `transferable` command says a new version is available, run `transferable update`
    (it updates the CLI and this skill), tell the user, and start a new conversation if the
    skill changed.
@@ -70,8 +72,12 @@ transferable deliver "Wedding - Dupont" --media <id>,<id> --expire 30 --json
   folders (with `file_count`) and media.
 - `--sections-from-subfolders`: one section per direct subfolder, titled with its name;
   files at the root of the folder stay outside sections.
-- `--like <delivery-id>` reuses the look of another delivery (fonts, cover, display
-  options), not its files.
+- `--like <delivery-id>` reuses the look of another delivery (fonts, colors, display
+  options), not its files. **Its cover image comes along, even if that image is not among
+  the files delivered**: tell the user, or change it with
+  `transferable delivery set <id> cover_media_id=<media-id>`. The title you give is the
+  whole title: the model's second title line is not copied (add one with
+  `title_line_2="..."`).
 - **Never add `--publish` without the user's explicit go-ahead**: publishing makes the link
   live for their client. Create the draft, show the user the title, the content and the
   link, and publish only when they confirm, with `transferable delivery publish <id>`.
@@ -84,7 +90,7 @@ transferable deliver "Wedding - Dupont" --media <id>,<id> --expire 30 --json
 ## Adjust a delivery
 
 ```sh
-transferable delivery show <id> --json                 # settings, sections, files in order
+transferable delivery show <id> --json                 # settings, sections with their files
 transferable delivery set <id> heading_font=menda title_line_2="Showroom" show_media_titles=false --json
 transferable delivery add <id> --media <ids> --section "Extras" --json
 transferable delivery add <id> --from "Shoot" --sections-from-subfolders --json
@@ -100,7 +106,14 @@ transferable delivery delete <id>                       # drafts only
   `accent_color`, `heading_font`, `heading_uppercase`, `heading_bold`, `show_media_titles`,
   `show_logo`, `downloads_enabled`, `notify_on_download`, `layout` (`grid` or `list`),
   `grid_columns` (1 to 6), `expiry_days`. An invalid value is refused with the allowed ones.
-- A duplicate is a new draft with the same look, sections and files.
+- In the JSON of a delivery, each entry of `sections` holds its files (`items`, in display
+  order) and `unsectioned_items` holds the files outside any section (shown after the
+  sections on the page).
+- Until a delivery is first published, changing `title_line_1` also changes its link. The
+  answer then has `previous_url`: give the user the new link. Once published, even if it
+  later expired or was taken offline, the link never changes.
+- A duplicate is a new draft with the same look, sections and files; `--title` replaces the
+  whole title.
 - Deleting a published delivery is refused: its link was sent. Never delete a delivery the
   user did not name.
 
