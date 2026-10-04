@@ -13,6 +13,7 @@ private link (`https://transferable.io/@handle/...`) the user sends to their cli
 
 1. Check the CLI: `transferable --version`. If missing, install it:
    - macOS / Linux with Homebrew: `brew install transferable-io/tap/transferable`
+   - with Node.js: `npm install -g @transferable/cli`
    - otherwise: `curl -fsSL https://transferable.io/install | sh`
 2. Check the account: `transferable whoami`. If it says not logged in, run
    `transferable login`: it opens the browser, and **the user must sign in and click
