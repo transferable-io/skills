@@ -20,6 +20,9 @@ private link (`https://transferable.io/@handle/...`) the user sends to their cli
    Authorize themselves**: tell them, then wait for the command to return (it waits up to
    5 minutes). To use another account: `transferable login --force`.
 3. Confirm with `transferable whoami`, and tell the user which account is connected.
+4. If a `transferable` command says a new version is available, run `transferable update`
+   (it updates the CLI and this skill), tell the user, and start a new conversation if the
+   skill changed.
 
 ## Safety
 
