@@ -1,6 +1,6 @@
 ---
 name: transferable
-description: Upload files and folders to a Transferable library and send them to a client as a delivery link, from the terminal, with the `transferable` CLI. Use when the user wants to deliver, send, share or hand over photos, videos, rushes, masters or any files to a client through Transferable, or asks to upload to their Transferable library, check an upload, or list their deliveries.
+description: Upload files and folders to a Transferable library and send them to a client as a delivery link, from the terminal, with the `transferable` CLI. Use when the user wants to deliver, send, share or hand over photos, videos, rushes, masters or any files to a client through Transferable, or asks to upload to their Transferable library, check an upload, list, adjust, duplicate or publish their deliveries.
 ---
 
 # Transferable
@@ -44,9 +44,12 @@ transferable status 5097d224 --json   # progress and per-file results
   command timeout. The job keeps running after you return.
 - Poll with `transferable status <job_id> --json` (or `--wait` when you can block). `status`
   is `running`, `done`, `failed` or `interrupted`.
-- A folder is recreated as is in the library; its root gets a number ("Wedding 2") if the
-  name is taken, nothing is merged. `--folder` puts everything inside that library folder,
-  created if missing.
+- A folder is recreated as is in the library, **subfolders included**; its root gets a
+  number ("Wedding 2") if the name is taken, nothing is merged. `--folder` puts everything
+  inside that library folder, created if missing.
+- `--include '<glob>'` and `--exclude '<glob>'` (repeatable) filter the files: a pattern
+  without `/` matches the file name (`--include '*-IA.jpg'`), with `/` the path from the
+  folder given (`--exclude 'Shoot/raw/*'`). Quote the patterns.
 - `interrupted` means the machine slept or the process died: rerun the same upload command,
   it resumes where it stopped (the status output prints the exact command).
 - Errors to relay to the user as is: `quota_exceeded`, `file limit`, `not enough storage`.
@@ -55,20 +58,48 @@ transferable status 5097d224 --json   # progress and per-file results
 
 ```sh
 transferable deliver "Wedding - Dupont" --from "Client - Project" --json
+transferable deliver "Showroom" --from "Shoot" --sections-from-subfolders --like <delivery-id> --json
 transferable deliver "Wedding - Dupont" --media <id>,<id> --expire 30 --json
 ```
 
-- `--from` takes a folder at the root of the library (name or id) and includes all its
-  subfolders. `transferable ls [folder-id] --json` lists folders and media.
+- `--from` takes a folder at the root of the library (name or id) with all its subfolders,
+  files in natural name order (01, 02... 10). `transferable ls [folder-id] --json` lists
+  folders (with `file_count`) and media.
+- `--sections-from-subfolders`: one section per direct subfolder, titled with its name;
+  files at the root of the folder stay outside sections.
+- `--like <delivery-id>` reuses the look of another delivery (fonts, cover, display
+  options), not its files.
 - **Never add `--publish` without the user's explicit go-ahead**: publishing makes the link
   live for their client. Create the draft, show the user the title, the content and the
-  link, and publish only when they confirm, with `--publish` on a new delivery or by asking
-  them to switch it live in the app.
+  link, and publish only when they confirm, with `transferable delivery publish <id>`.
 - Publishing is refused while media are still uploading (`media_not_ready`): wait for the
   upload job to be `done` first. `publish_error` in the answer means the delivery was
   created as a draft but not published (for example `needs_card`: the user must add a
   payment method in the app).
 - `--expire <days>` is capped by the user's plan. `--accent "#RRGGBB"` sets the accent color.
+
+## Adjust a delivery
+
+```sh
+transferable delivery show <id> --json                 # settings, sections, files in order
+transferable delivery set <id> heading_font=menda title_line_2="Showroom" show_media_titles=false --json
+transferable delivery add <id> --media <ids> --section "Extras" --json
+transferable delivery add <id> --from "Shoot" --sections-from-subfolders --json
+transferable delivery remove <id> --media <ids> --json  # out of the delivery, kept in the library
+transferable delivery order <id> --media <ids> --json   # these files first, in this order
+transferable delivery sections <id> --create "Day 2" --rename <section-id>="Day 1" --order <id>,<id> --json
+transferable delivery duplicate <id> --title "Wedding - Dupont (v2)" --json
+transferable delivery delete <id>                       # drafts only
+```
+
+- Settings for `set`: `title_line_1`, `title_line_2`, `cover_media_id`, `recorded_on`
+  (YYYY-MM-DD), `location`, `credits` (JSON list of `{"role","name"}`), `locale`,
+  `accent_color`, `heading_font`, `heading_uppercase`, `heading_bold`, `show_media_titles`,
+  `show_logo`, `downloads_enabled`, `notify_on_download`, `layout` (`grid` or `list`),
+  `grid_columns` (1 to 6), `expiry_days`. An invalid value is refused with the allowed ones.
+- A duplicate is a new draft with the same look, sections and files.
+- Deleting a published delivery is refused: its link was sent. Never delete a delivery the
+  user did not name.
 
 ## Other
 
