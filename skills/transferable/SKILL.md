@@ -11,13 +11,15 @@ private link (`https://transferable.io/@handle/...`) the user sends to their cli
 
 ## Setup
 
-1. Check the CLI: `transferable --version`. If missing, install it:
-   - macOS / Linux with Homebrew: `brew install transferable-io/tap/transferable`
-   - with Node.js: `npm install -g @transferable/cli`
-   - otherwise: `curl -fsSL https://transferable.io/install | sh`
-2. Check the account: `transferable whoami`. If it says not logged in, run
-   `transferable login`: it opens the browser, and **the user must sign in and click
-   Authorize themselves**. Tell them, then wait for the command to return.
+1. Check the CLI: `transferable --version`. If it is missing, install it with
+   `curl -fsSL https://transferable.io/install | sh` (it uses Homebrew's copy when there is
+   one, and prints the full path to use if its directory is not on the PATH). Homebrew:
+   `brew install transferable-io/tap/transferable`. Node.js: `npm install -g @transferable/cli`.
+2. Sign in: `transferable login`. If the user is already signed in, it says so and returns
+   at once. Otherwise it opens the browser, and **the user must sign in and click
+   Authorize themselves**: tell them, then wait for the command to return (it waits up to
+   5 minutes). To use another account: `transferable login --force`.
+3. Confirm with `transferable whoami`, and tell the user which account is connected.
 
 Always pass `--json` when you need to read the output.
 
